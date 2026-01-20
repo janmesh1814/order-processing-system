@@ -38,6 +38,9 @@ object OrderActor {
           )
 
           waitingForInventory(cmd)
+
+        case _ =>
+          Behaviors.unhandled
       }
     }
 
@@ -67,6 +70,9 @@ object OrderActor {
           cmd.replyTo ! OrderRejected("Out of stock")
 
           Behaviors.stopped
+
+        case _ =>
+          Behaviors.unhandled
       }
     }
 }

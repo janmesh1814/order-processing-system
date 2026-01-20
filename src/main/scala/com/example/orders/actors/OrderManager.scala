@@ -14,7 +14,7 @@ object OrderManager {
                                 quantity: Int,
                                 replyTo: ActorRef[OrderResult]
                               ) extends Command
-                               $
+
   def apply(
              inventoryActor: ActorRef[InventoryActor.Command]
            ): Behavior[Command] =

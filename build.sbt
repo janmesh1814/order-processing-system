@@ -5,10 +5,14 @@ lazy val root = (project in file("."))
     name := "order-processing-system",
     version := "0.1.0",
 
+    Test / logBuffered := false,
+
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor-typed" % "2.8.5",
       "com.typesafe.akka" %% "akka-slf4j" % "2.8.5",
       "ch.qos.logback" % "logback-classic" % "1.4.11",
-      "mysql" % "mysql-connector-j" % "8.3.0"
+      "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.8.5" % Test,
+      "io.cucumber" %% "cucumber-scala" % "8.1.0" % Test,
+      "io.cucumber" % "cucumber-junit" % "7.14.0" % Test
     )
   )
