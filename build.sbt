@@ -12,7 +12,9 @@ lazy val root = (project in file("."))
       "com.typesafe.akka" %% "akka-slf4j" % "2.8.5",
       "ch.qos.logback" % "logback-classic" % "1.4.11",
       "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.8.5" % Test,
-      "io.cucumber" %% "cucumber-scala" % "8.1.0" % Test,
-      "io.cucumber" % "cucumber-junit" % "7.14.0" % Test
+      "io.cucumber" %% "cucumber-scala"  % "6.10.4" % Test,
+      "io.cucumber" %  "cucumber-junit"  % "6.10.4" % Test,
+      "junit" % "junit" % "4.13.2" % Test,
+      "com.github.sbt" % "junit-interface" % "0.13.3" % Test
     )
   )

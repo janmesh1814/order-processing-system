@@ -1,31 +1,32 @@
-package com.example.orders.steps
+package com.example.orders
 
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import com.example.orders.actors._
-import com.example.orders.actors.OrderActor.OrderResult
+import com.example.orders.actors.OrderActor._
 import io.cucumber.scala.{EN, ScalaDsl}
+import org.junit.Assert._
 
 class OrderProcessingSteps extends ScalaDsl with EN {
 
   private val testKit = ActorTestKit()
 
-  private var orderResult: Option[OrderResult] = None
-  private var inventoryData: Map[String, Int] = Map.empty
+  private var inventory: Map[String, Int] = Map.empty
+  private var orderResult: OrderResult = _
 
   // GIVEN
   Given(
-    """inventory has (\d+) quantity of product with id "([^"]+)""""
-  ) { (quantity: Int, productId: String) =>
-    inventoryData += (productId -> quantity)
+    """inventory has {int} quantity of product with id "{word}""""
+  ) { (qty: Int, productId: String) =>
+    inventory = Map(productId -> qty)
   }
 
   // WHEN
   When(
-    """user tries to place order for product with id "([^"]+)" with quantity (\d+)"""
+    """user tries to place order for product with id "{word}" with quantity {int}"""
   ) { (productId: String, quantity: Int) =>
 
     val inventoryActor =
-      testKit.spawn(InventoryActor(inventoryData))
+      testKit.spawn(InventoryActor(inventory))
 
     val orderManager =
       testKit.spawn(OrderManager(inventoryActor))
@@ -38,18 +39,15 @@ class OrderProcessingSteps extends ScalaDsl with EN {
       replyTo = probe.ref
     )
 
-    orderResult = Some(probe.receiveMessage())
+    orderResult = probe.receiveMessage()
   }
 
-  // THEN (ACCEPT)
+  // THEN
   Then("""Accept the order""") { () =>
-    println(s"Order result = $orderResult")
-    assert(orderResult.exists(_.isInstanceOf[OrderActor.OrderConfirmed]))
+    assertTrue(orderResult.isInstanceOf[OrderConfirmed])
   }
 
-  // THEN (REJECT)
   Then("""Reject the order""") { () =>
-    println(s"Order result = $orderResult")
-    assert(orderResult.exists(_.isInstanceOf[OrderActor.OrderRejected]))
+    assertTrue(orderResult.isInstanceOf[OrderRejected])
   }
 }
