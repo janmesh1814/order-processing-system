@@ -4,6 +4,7 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import com.example.orders.actors._
 import com.example.orders.actors.OrderActor.OrderResult
+import com.example.orders.repository.InventoryRepository
 
 object Main {
 
@@ -11,14 +12,15 @@ object Main {
 
     val rootBehavior = Behaviors.setup[Nothing] { context =>
 
-      val initialInventory = Map(
-        "product-1" -> 10,
-        "product-2" -> 0
-      )
+//      val initialInventory = Map(
+//        "product-1" -> 10,
+//        "product-2" -> 0
+//      )
 
+      val inventoryRepository = new InventoryRepository
       val inventoryActor =
         context.spawn(
-          InventoryActor(initialInventory),
+          InventoryActor(inventoryRepository),
           "inventory-actor"
         )
 

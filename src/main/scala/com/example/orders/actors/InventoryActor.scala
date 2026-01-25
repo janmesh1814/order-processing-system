@@ -1,7 +1,11 @@
 package com.example.orders.actors
 
-import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.{ActorRef, Behavior, DispatcherSelector}
 import akka.actor.typed.scaladsl.Behaviors
+import com.example.orders.repository.InventoryRepository
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 object InventoryActor {
   sealed trait Command
@@ -12,46 +16,49 @@ object InventoryActor {
                                          replyTo: ActorRef[StockResponse]
                                        ) extends Command
 
+  private final case class WrappedDbResult(
+                                            success: Boolean,
+                                            replyTo: ActorRef[StockResponse]
+                                          ) extends Command
+
   sealed trait StockResponse
   case object StockReserved extends StockResponse
   case object OutOfStock extends StockResponse
 
-  def apply(initialInventory: Map[String, Int]): Behavior[Command] =
+  def apply(
+             inventoryRepository: InventoryRepository
+           ): Behavior[Command] =
     Behaviors.setup { context =>
-      context.log.info("InventoryActor started")
 
-      active(initialInventory)
-    }
+      implicit val ec: ExecutionContext =
+        context.system.dispatchers.lookup(
+          DispatcherSelector.fromConfig("akka.actor.blocking-dispatcher")
+        )
 
-  private def active(inventory: Map[String, Int]): Behavior[Command] =
-    Behaviors.receive { (context, message) =>
-      message match {
+      Behaviors.receiveMessage {
 
         case CheckAndReserveStock(productId, quantity, replyTo) =>
 
-          val currentStock = inventory.getOrElse(productId, 0)
-
-          if (currentStock >= quantity) {
-            Thread.sleep(300) // for concurrency
-            context.log.info(
-              s"Stock available for product=$productId, reserving $quantity"
-            )
-
-            val updatedInventory =
-              inventory.updated(productId, currentStock - quantity)
-
-            replyTo ! StockReserved
-
-            active(updatedInventory)
-          } else {
-            context.log.warn(
-              s"Out of stock for product=$productId, requested=$quantity, available=$currentStock"
-            )
-
-            replyTo ! OutOfStock
-
-            Behaviors.same
+          context.pipeToSelf(
+            Future {
+              inventoryRepository.reserveStock(productId, quantity)
+            }
+          ) {
+            case Success(result) =>
+              WrappedDbResult(result, replyTo)
+            case Failure(_) =>
+              WrappedDbResult(false, replyTo)
           }
+
+          Behaviors.same
+
+        case WrappedDbResult(true, replyTo) =>
+          replyTo ! StockReserved
+          Behaviors.same
+
+        case WrappedDbResult(false, replyTo) =>
+          replyTo ! OutOfStock
+          Behaviors.same
       }
     }
 }

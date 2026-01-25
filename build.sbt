@@ -6,6 +6,7 @@ lazy val root = (project in file("."))
     version := "0.1.0",
 
     Test / logBuffered := false,
+    resolvers += Resolver.mavenCentral,
 
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor-typed" % "2.8.5",
@@ -15,6 +16,7 @@ lazy val root = (project in file("."))
       "io.cucumber" %% "cucumber-scala"  % "6.10.4" % Test,
       "io.cucumber" %  "cucumber-junit"  % "6.10.4" % Test,
       "junit" % "junit" % "4.13.2" % Test,
-      "com.github.sbt" % "junit-interface" % "0.13.3" % Test
+      "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
+      "mysql" % "mysql-connector-java" % "8.0.33"
     )
   )
