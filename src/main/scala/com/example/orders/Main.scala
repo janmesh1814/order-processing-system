@@ -5,6 +5,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import com.example.orders.actors._
 import com.example.orders.actors.OrderActor.OrderResult
 import com.example.orders.repository.InventoryRepository
+import com.example.orders.config.DatabaseInitializer
 
 object Main {
 
@@ -16,7 +17,7 @@ object Main {
 //        "product-1" -> 10,
 //        "product-2" -> 0
 //      )
-
+      DatabaseInitializer.initialize()
       val inventoryRepository = new InventoryRepository
       val inventoryActor =
         context.spawn(
